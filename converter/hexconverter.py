@@ -7,56 +7,65 @@ import logging.handlers
 import argparse
 from intelhex import IntelHex
 from genericpath import isfile, isdir
+
+# Attention: `pathlib` only works >= python3.4
 from pathlib import Path as PathObject
 from os import path
 
+# To avoid exit is not defined error after py2exe packed, must import `exit`
 # https://stackoverflow.com/questions/45066518/nameerror-name-exit-is-not-defined
 from sys import exit
 
-_logger = None
-_parser = None
+_logger = None  # logger object
+_parser = None  # argparser object
 
-_HEX_EXT = ".hex"
-_POSTFIX = "SH"
+_HEX_EXT = ".hex"  # hex file extension
+_POSTFIX = "SH"  # converted hex file postfix
 
-_R_SUCCESS = 0
-_R_FAIL = -1
-_R_UNKNOWN = -2
+_R_SUCCESS = 0  # convert success
+_R_FAIL = -1  # convert failed
+_R_UNKNOWN = -2  # unexpected error happened
 
 """
-Sector           		NUM
+Converted hex file structure:
+
+SECTOR           		NUM           COMMENT
 Bank0_MAC_Para		    14
 Bank0_MAC_checksum		2
-Bank0_other_Para		others
+Bank0_other_Para		others        dynamic length
 Bank0_other_checksum	2
-		
-Bank1_MAC_Para		    14
-Bank1_MAC_checksum		2
-Bank1_other_Para		others
-Bank1_other_checksum	2
-		
+
+Bank1_MAC_Para		    14            copy of Bank0_MAC_Para
+Bank1_MAC_checksum		2             copy of Bank0_MAC_checksum
+Bank1_other_Para		others        copy of Bank0_other_Para
+Bank1_other_checksum	2             copy of Bank0_other_checksum
+
 EZY	                	the rest
 EZY_checksum		    2
+
+Bank2_MAC_Para		    14            copy of Bank0_MAC_Para
+Bank2_MAC_checksum		2             copy of Bank0_MAC_checksum
+Bank2_other_Para		others        copy of Bank0_other_Para
+Bank2_other_checksum	2             copy of Bank0_other_checksum 
 """
 
-_MAC0_START = 1
-_MAC0_END = 16
-_MAC0_LEN = 16
-_PARA0_START = _MAC0_END + 1
-_IN_END = 511
+_MAC0_START = 1  # Bank0_MAC start address
+_MAC0_END = 16  # Bank0_MAC end address
+_MAC0_LEN = 16  # Bank0_MAC total size
+_PARA0_START = _MAC0_END + 1  # Bank0_other start address
+_IN_END = 511  # EZY end address
 
-_OUT_LEN = 0x1000
-_OUT_SEC0 = 0x0000
-_OUT_SEC1 = 0x0200
-_OUT_SEC2 = 0x0400
-_OUT_SEC3 = 0x0600
-_OUT_SEC4 = 0x0800
-_OUT_SEC5 = 0x0A00
-_OUT_SEC6 = 0x0C00
-_OUT_SEC7 = 0x0E00
+_OUT_LEN = 0x1000  # conveted hex file total size
+_OUT_SEC0 = 0x0000  # Bank0_MAC start address
+_OUT_SEC1 = 0x0200  # Bank0_other start address
+_OUT_SEC2 = 0x0400  # Bank1_MAC start address
+_OUT_SEC3 = 0x0600  # Bank1_other start address
+_OUT_SEC4 = 0x0800  # EZY start address
+_OUT_SEC5 = 0x0A00  # Bank2_MAC start address
+_OUT_SEC6 = 0x0C00  # Bank2_other start address
+# _OUT_SEC7 = 0x0E00 # not used at current
 
-
-# initialize the option
+# Initialize the option
 def init_option():
     # parse arguments
     parser = argparse.ArgumentParser()
@@ -65,7 +74,7 @@ def init_option():
     # If it only a file path, test if it is a valid hex file
     parser.add_argument(
         "--path",
-        help="""If the path is a directory, 
+        help="""If the path is a directory,
                         retreving all the hex files in it.k
                         Else it must be a hex file.""",
     )
@@ -75,7 +84,7 @@ def init_option():
     parser.add_argument(
         "--out",
         default=None,
-        help="""Specified where the converted files would be output,
+        help="""Specify where the converted files would be output,
                         If not set, the working directory is default.""",
     )
     return parser
@@ -106,6 +115,7 @@ def init_logger():
     return logger
 
 
+# Do conversion for all files
 def do_conversion(files, dest):
     result = True
     for file in files:
@@ -121,16 +131,18 @@ def do_conversion(files, dest):
 
         _logger.info("Convert %s -> %s", file, output)
 
-        result = True if result and convert_hex_file(file, output) else False
+        result = True if convert_hex_file(file, output) and result else False
 
     return result
 
 
 # Do convesion for each file
 def convert_hex_file(src, dest):
+
     out_fs = None
     in_hex = None
     out_hex = None
+
     try:
         out_fs = open(dest, "w")
 
@@ -144,19 +156,21 @@ def convert_hex_file(src, dest):
 
         # Found the mac0_block index
         index = in_hex.find(mac0_block, _PARA0_START)
-        _logger.info(index)
+        _logger.debug("Found start address: %s", index)
         if index == -1:
             return False
         para0_len = index - _PARA0_START
-        _logger.info(para0_len)
+        _logger.info("Calculated other para size: %s", para0_len)
         para0_block = in_hex.gets(_PARA0_START, para0_len)
 
+        # EZY start address = Blank0_MAC start address + (Blank0_MAC total size + Blank0_other total size) * 2
         ezy_start = _MAC0_START + (_MAC0_LEN + para0_len) * 2
         ezy_block = in_hex.gets(ezy_start, _IN_END - ezy_start + 1)
 
-        # Initialize
+        # Initialize all blocks with empty
         blank_block = bytearray(_OUT_LEN)
         out_hex.puts(_OUT_SEC0, bytes(blank_block))
+
         out_hex.puts(_OUT_SEC0, mac0_block)
         out_hex.puts(_OUT_SEC1, para0_block)
         out_hex.puts(_OUT_SEC2, mac0_block)
@@ -176,16 +190,18 @@ def convert_hex_file(src, dest):
             out_fs.close()
 
 
-# Read files from the source directory to retrieve hex file
+# Read files from the source directory to retrieve all hex files
 def scan_hex_files(inpath):
     if not exists_path(inpath):
         _logger.error("Input path: %s not exists", inpath)
         return []
 
-    def is_valid_hex_files(f):
+    # check if it is a valid hex file
+    def is_valid_hex_file(f):
         _, file_extension = path.splitext(f)
         return file_extension.lower() == _HEX_EXT
 
+    # retrieve all the hex files for dictory
     def retrieve_all_hex_files(folder):
         p = os.walk(folder)
         for _, dirs, files in p:
@@ -193,25 +209,28 @@ def scan_hex_files(inpath):
                 for file in retrieve_all_hex_files(dir):
                     yield get_full_path(file)
             for file in files:
-                if is_valid_hex_files(file):
+                if is_valid_hex_file(file):
                     yield get_full_path(file)
 
     if isfile(inpath):
-        return [] if not is_valid_hex_files(inpath) else [inpath]
+        return [] if not is_valid_hex_file(inpath) else [inpath]
     elif isdir(inpath):
         return list(retrieve_all_hex_files(inpath))
     else:
         return []
 
 
+# get the absolute path
 def get_full_path(path):
     return str(PathObject(path).resolve().absolute())
 
 
+# Check if the path or file is exists or not
 def exists_path(path):
     return PathObject(path).resolve().exists()
 
 
+# Get a file name without extension
 def get_name_noext(path):
     return PathObject(path).stem
 
