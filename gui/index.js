@@ -1,26 +1,19 @@
-const { app, BrowserWindow, Menu } = require('electron')
+const { dialog } = require('electron')
+const { Application, handle } = require('./application')
 
-Menu.setApplicationMenu(false)
+const app = new Application()
 
-function createWindow() {
-    const win = new BrowserWindow({
-        width: 800,
-        height: 600
+app.startup().then(() => {
+    handle('path-selection', async (e, ...args) => {
+        const dlg = await dialog.showOpenDialog({
+            properties: ['openFile', 'openDirectory']
+        })
+        return dlg.filePaths[0]
     })
-
-    win.setResizable(false)
-    win.loadFile('index.html')
-}
-
-
-app.whenReady().then(() => {
-    createWindow()
-    app.on('activate', function () {
-        if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    handle('folder-selection', async (e, ...args) => {
+        const dlg = await dialog.showOpenDialog({
+            properties: ['openDirectory']
+        })
+        return dlg.filePaths[0]
     })
 })
-
-app.on('window-all-closed', function () {
-    if (process.platform !== 'darwin') app.quit()
-})
-

@@ -6,6 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>IntelHex Converter</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <!-- https://www.reddit.com/r/electronjs/comments/f2yy0z/removing_scrollbar_in_chrome_browserwindow/ -->
+    <style type="text/css">
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
@@ -17,18 +23,18 @@
         </div>
         <div class="columns ml-2">
             <div class="column is-10">
-                <input class="input is-primary" type="text" placeholder="Search">
+                <input class="input is-primary" type="text" placeholder="Select a diectory or file">
             </div>
             <div class="column">
-                <button class="button is-primary">Browse</button>
+                <button class="button is-primary" id="pathSelector">Browse</button>
             </div>
         </div>
         <div class="columns ml-2">
             <div class="column is-10">
-                <input class="input is-primary" type="text" placeholder="Search">
+                <input id="folderInput" class="input is-primary" type="text" placeholder="Select a target folder">
             </div>
             <div class="column">
-                <button class="button is-primary">Browse</button>
+                <button class="button is-primary" id="folderSelector">Browse</button>
             </div>
         </div>
         <div class="columns">
@@ -61,6 +67,7 @@
             </div>
         </div>
     </div>
+    <script type="text/javascript" src="gui.js"></script>
 </body>
 
 </html>
