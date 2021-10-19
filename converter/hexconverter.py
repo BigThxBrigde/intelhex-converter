@@ -18,6 +18,7 @@ from sys import exit
 
 _logger = None  # logger object
 _parser = None  # argparser object
+_msgsender = None  # message sender
 
 _HEX_EXT = ".hex"  # hex file extension
 _POSTFIX = "SH"  # converted hex file postfix
@@ -64,6 +65,9 @@ _OUT_SEC4 = 0x0800  # EZY start address
 _OUT_SEC5 = 0x0A00  # Bank2_MAC start address
 _OUT_SEC6 = 0x0C00  # Bank2_other start address
 # _OUT_SEC7 = 0x0E00 # not used at current
+_S_PROC = "PROC"
+_S_SUCCESS = "SUCC"
+_S_FAIL = "FAIL"
 
 # Initialize the option
 def init_option():
@@ -87,7 +91,18 @@ def init_option():
         help="""Specify where the converted files would be output,
                         If not set, the working directory is default.""",
     )
+
+    # https://stackoverflow.com/questions/8259001/python-argparse-command-line-flags-without-arguments
+    parser.add_argument(
+        "--messaging",
+        action="store_true",
+        help="""Specify if app would send additional message to `stdout`""",
+    )
     return parser
+
+
+def post_message(src, dest, status):
+    _msgsender.post(msg={"source": src, "target": dest, "status": status})
 
 
 # initialize the logger
@@ -113,6 +128,13 @@ def init_logger():
 
     logger.addHandler(std_stream_handler)
     return logger
+
+
+# initialize message sender
+def init_msgsender():
+    from msgsender import MessageSender
+
+    return MessageSender()
 
 
 # Do conversion for all files
@@ -142,6 +164,7 @@ def convert_hex_file(src, dest):
     out_fs = None
     in_hex = None
     out_hex = None
+    post_message(src, dest, _S_PROC)
 
     try:
         out_fs = open(dest, "w")
@@ -158,6 +181,7 @@ def convert_hex_file(src, dest):
         index = in_hex.find(mac0_block, _PARA0_START)
         _logger.debug("Found start address: %s", index)
         if index == -1:
+            post_message(src, dest, _S_FAIL)
             return False
         para0_len = index - _PARA0_START
         _logger.info("Calculated other para size: %s", para0_len)
@@ -181,9 +205,11 @@ def convert_hex_file(src, dest):
 
         out_hex.write_hex_file(dest)
 
+        post_message(src, dest, _S_SUCCESS)
         return True
     except Exception as err:
         _logger.error(err)
+        post_message(src, dest, _S_FAIL)
         return False
     finally:
         if out_fs is not None:
@@ -240,6 +266,7 @@ def format_option(arg_dict):
     _logger.info("Arguments read: %s", arg_dict)
     input_path = arg_dict["path"]
     output_path = arg_dict["out"]
+    messaging = arg_dict["messaging"]
 
     if input_path is None:
         _logger.error("Input path is empty, converter exit")
@@ -255,7 +282,7 @@ def format_option(arg_dict):
     _logger.info("Input path: %s", input_path)
     _logger.info("Out path: %s", output_path)
 
-    return input_path, output_path
+    return input_path, output_path, messaging
 
 
 # The main entry
@@ -266,12 +293,17 @@ def main_entry():
     if opt is None:
         return _R_FAIL
 
-    input_path, out_path = opt
+    input_path, out_path, messaging = opt
+
     hex_files = scan_hex_files(input_path)
 
     if len(hex_files) == 0:
         _logger.info("No hex files found, conveter exit")
         return _R_SUCCESS
+
+    _logger.info("Addtional message would be sent: %s", messaging)
+    if messaging:
+        _msgsender.enable = True
 
     try:
         return _R_SUCCESS if do_conversion(hex_files, out_path) else _R_FAIL
@@ -284,6 +316,8 @@ if __name__ == "__main__":
     try:
         _logger = init_logger()
         _parser = init_option()
+        _msgsender = init_msgsender()
+
         exit(main_entry())
     except Exception as err:
         print(err)

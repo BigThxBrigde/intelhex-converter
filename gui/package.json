@@ -1,0 +1,23 @@
+{
+  "name": "hexconverter-gui",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "conv": "node test_conversion.js",
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://gitee.com/jermaine/intelhex-converter"
+  },
+  "keywords": [
+    "intel",
+    "hex"
+  ],
+  "author": "i77",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^15.2.0"
+  }
+}
