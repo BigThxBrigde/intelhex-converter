@@ -78,6 +78,7 @@ def init_option():
     # If it only a file path, test if it is a valid hex file
     parser.add_argument(
         "--path",
+        required=True,
         help="""If the path is a directory,
                         retreving all the hex files in it.k
                         Else it must be a hex file.""",

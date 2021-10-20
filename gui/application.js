@@ -1,6 +1,8 @@
 
 const { app, BrowserWindow, Menu, ipcMain, ipcRenderer } = require('electron')
 
+const { stat } = require('fs/promises')
+
 const pathExists = async (path) => await
     stat(path).then((stats) => {
         return stats.isFile() || stats.isDirectory()
@@ -56,9 +58,15 @@ class IPC {
     static handle(name, handler) { ipcMain.handle(name, handler) }
 
     static async invoke(name, ...args) { return await ipcRenderer.invoke(name, ...args) }
-}
 
-const { stat } = require('fs/promises')
+    static on(name, handler) { ipcMain.on(name, handler) }
+
+    static send(name, ...args) { ipcRenderer.send(name, ...args) }
+
+    static rendererOn(name, handler) { ipcRenderer.on(name, handler) }
+
+    static mainSend(mainWindow, name, ...args) { mainWindow.webContents.send(name, ...args) }
+}
 
 
 module.exports = { Application, IPC, pathExists }

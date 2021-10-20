@@ -1,8 +1,6 @@
 
 const path = require('path')
 const { IPC, pathExists } = require('../application')
-const { PyConverter } = require('../conversion')
-
 
 const inputFileSelector = document.querySelector('#inputFileSelector')
 const inputFolderSelector = document.querySelector('#inputFolderSelector')
@@ -27,20 +25,17 @@ inputFolderSelector.addEventListener('click', async () => await selectPath('path
 
 targetFolderSelector.addEventListener('click', async () => await selectPath('target-selection', targetFolderInput))
 
-convertBtn.addEventListener('click', async () => {
-    const converter = new PyConverter(pathInput.value, targetFolderInput.value)
-    const onMessage = (data) => {
-        console.log(data)
-    }
-    const onLog = (data) => {
-        console.log(data)
-    }
-    const onError = (data) => {
-        console.log(data)
-    }
-    const onExit = (data) => {
-        console.log(data)
-    }
+convertBtn.addEventListener('click', () => IPC.send('on-conv', pathInput.value, targetFolderInput.value))
 
-    await converter.convert(onMessage, onLog, onError, onExit)
+IPC.rendererOn('on-conv-message', (e, args) => {
+    console.log(args)
+})
+IPC.rendererOn('on-conv-log', (e, args) => {
+    console.log(args)
+})
+IPC.rendererOn('on-conv-error', (e, args) => {
+    console.log(args)
+})
+IPC.rendererOn('on-conv-exit', (e, args) => {
+    console.log(args)
 })
