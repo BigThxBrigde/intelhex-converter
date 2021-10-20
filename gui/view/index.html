@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
     <!-- https://www.reddit.com/r/electronjs/comments/f2yy0z/removing_scrollbar_in_chrome_browserwindow/ -->
     <style type="text/css">
-        ::-webkit-scrollbar {
+        body::-webkit-scrollbar {
             display: none;
         }
     </style>
@@ -34,7 +34,7 @@
         </div>
         <div class="columns ml-2">
             <div class="column is-7">
-                <input  class="input is-primary" id="targetFolderInput" type="text" placeholder="Select a target folder">
+                <input class="input is-primary" id="targetFolderInput" type="text" placeholder="Select a target folder">
             </div>
             <div class="column is-3 is-narrow">
             </div>
@@ -42,22 +42,23 @@
                 <button class="button is-primary" id="targetFolderSelector">Browse</button>
             </div>
         </div>
-        <div class="columns">
+        <div class="columns mb-1">
             <div class="column is-full is-primary">
                 <p class="title is-6 has-background-primary has-text-white p-3 m-0">Result</p>
             </div>
         </div>
-        <div class="columns ml-2">
-            <div class="column is-full is-primary">
-                <table class="table">
-                    <th>
-                        <thead>
-                            <tr>
-                                <th>Source</th>
-                                <th>Destination</th>
-                            </tr>
-                        </thead>
-                    </th>
+        <div class="columns ml-2 mr-3 p-0">
+            <div class="column is-full is-primary m-0" style="height: 220px; width: 790px; overflow-y: auto;">
+                <table class="table m-0 p-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 47%;">Source</th>
+                            <th style="width: 47%;">Destination</th>
+                            <th style="width: 6%;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultGrid">
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -66,9 +67,12 @@
                 <p class="title is-6 has-background-primary has-text-white p-3 m-0">logs</p>
             </div>
         </div>
-        <div class="columns">
+        <div class="columns ml-2  p-0">
             <div class="column is-full is-primary">
-
+                <article class="message is-primary">
+                    <div id="logPanel" class="message-body" style="height: 120px; width: 780px; overflow-y: auto;">
+                    </div>
+                </article>
             </div>
         </div>
         <div class="columns is-centered">
@@ -78,7 +82,9 @@
             <div class="column is-narrow">
                 <button class="button is-primary" id="convertBtn">Convert</button>
             </div>
+
         </div>
+        <progress id="progressBar" class="progress is-primary" value="0" max="100"></progress>
     </div>
     <script type="text/javascript" src="../script/gui.js"></script>
 </body>

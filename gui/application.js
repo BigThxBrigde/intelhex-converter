@@ -17,13 +17,11 @@ class Application {
     }
 
     async startup() {
-        if (process.env.CONFIGURATION != "DEBUG") {
-            Menu.setApplicationMenu(false)
-        }
         const createWindow = () => {
             this.mainWindow = new BrowserWindow({
                 width: 800,
-                height: 600,
+                height: 763,
+                useContentSize: true,
                 webPreferences: {
                     nodeIntegration: true,
                     contextIsolation: false,
@@ -32,6 +30,7 @@ class Application {
 
             if (process.env.CONFIGURATION !== "DEBUG") {
                 this.mainWindow.setResizable(false)
+                this.mainWindow.setMenu(new Menu())
             }
             this.mainWindow.loadFile('view/index.html')
         }

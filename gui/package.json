@@ -6,6 +6,7 @@
   "scripts": {
     "conv": "node test_conversion.js",
     "dev": "set CONFIGURATION=DEBUG&& electron .",
+    "dev-linux": "export CONFIGURATION=DEBUG&& electron .",
     "start": " electron ."
   },
   "repository": {

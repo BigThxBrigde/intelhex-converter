@@ -2,7 +2,11 @@ const { exec } = require('child_process')
 const { EOL } = require('os')
 const path = require('path')
 
-const converter = path.resolve('../converter/dist/hexconverter.exe')
+const converters = {
+    'win32': path.resolve('../converter/dist/hexconverter.exe'),
+    'linux': path.resolve('../converter/dist/hexconverter')
+}
+const converter = converters[process.platform] || ''
 
 const MSG_IDENT = "__MSG__IDENT__"
 
@@ -12,11 +16,17 @@ class PyConverter {
         this.target = path.resolve(target)
     }
 
-    convert(onMessage, onLog, onError, onExit) {
+    convert(options) {
         try {
+            const { onStart, onMessage, onLog, onError, onExit } = options
+            if (!converter) {
+                onError('No converter found')
+                return;
+            }
+
+            onStart()
             const cmd = `${converter} --path "${this.source}" --out "${this.target}"  --messaging`
             const proc = exec(cmd)
-
             proc.stdout.on('data', data => {
                 const lines = data.split(EOL)
                 lines.forEach((e, i) => {
@@ -37,6 +47,8 @@ class PyConverter {
                 onExit(data)
             })
         } catch (e) {
+            console.log(e)
+            onExit('Unknown error')
         }
     }
 }
