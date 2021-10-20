@@ -1,6 +1,12 @@
 
-const { app, BrowserWindow, Menu, ipcMain, dialog, ipcRenderer } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain, ipcRenderer } = require('electron')
 
+const pathExists = async (path) => await
+    stat(path).then((stats) => {
+        return stats.isFile() || stats.isDirectory()
+    }).catch(e => {
+        return false
+    })
 
 class Application {
 
@@ -9,7 +15,7 @@ class Application {
     }
 
     async startup() {
-        if (process.env.DEBUG) {
+        if (process.env.CONFIGURATION != "DEBUG") {
             Menu.setApplicationMenu(false)
         }
         const createWindow = () => {
@@ -22,8 +28,10 @@ class Application {
                 }
             })
 
-            this.mainWindow.setResizable(false)
-            this.mainWindow.loadFile('index.html')
+            if (process.env.CONFIGURATION !== "DEBUG") {
+                this.mainWindow.setResizable(false)
+            }
+            this.mainWindow.loadFile('view/index.html')
         }
 
         await app.whenReady()
@@ -43,8 +51,14 @@ class Application {
 
 }
 
-const handle = (name, handler) => ipcMain.handle(name, handler)
+class IPC {
 
-const invoke = async (name, ...args) => await ipcRenderer.invoke(name, args)
+    static handle(name, handler) { ipcMain.handle(name, handler) }
 
-module.exports = { Application, handle, invoke }
+    static async invoke(name, ...args) { return await ipcRenderer.invoke(name, ...args) }
+}
+
+const { stat } = require('fs/promises')
+
+
+module.exports = { Application, IPC, pathExists }

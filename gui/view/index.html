@@ -18,31 +18,36 @@
     <div class="box p-0 m-0">
         <div class="columns">
             <div class="column is-full">
-                <p class="title is-5 has-background-primary has-text-white p-3 m-0">Settings</p>
+                <p class="title is-6 has-background-primary has-text-white p-3 m-0">Settings</p>
             </div>
         </div>
         <div class="columns ml-2">
-            <div class="column is-10">
-                <input class="input is-primary" type="text" placeholder="Select a diectory or file">
+            <div class="column is-7 mr-5">
+                <input class="input is-primary" id="pathInput" type="text" placeholder="Select a diectory or file">
             </div>
-            <div class="column">
-                <button class="button is-primary" id="pathSelector">Browse</button>
+            <div class="column is-narrow">
+                <div class="buttons is-right">
+                    <button class="button is-primary" id="inputFileSelector">Browse File</button>
+                    <button class="button is-primary" id="inputFolderSelector">Browse Folder</button>
+                </div>
             </div>
         </div>
         <div class="columns ml-2">
-            <div class="column is-10">
-                <input id="folderInput" class="input is-primary" type="text" placeholder="Select a target folder">
+            <div class="column is-7">
+                <input  class="input is-primary" id="targetFolderInput" type="text" placeholder="Select a target folder">
             </div>
-            <div class="column">
-                <button class="button is-primary" id="folderSelector">Browse</button>
+            <div class="column is-3 is-narrow">
+            </div>
+            <div class="column is-narrow">
+                <button class="button is-primary" id="targetFolderSelector">Browse</button>
             </div>
         </div>
         <div class="columns">
             <div class="column is-full is-primary">
-                <p class="title is-5 has-background-primary has-text-white p-3 m-0">Result</p>
+                <p class="title is-6 has-background-primary has-text-white p-3 m-0">Result</p>
             </div>
         </div>
-        <div class="columns">
+        <div class="columns ml-2">
             <div class="column is-full is-primary">
                 <table class="table">
                     <th>
@@ -58,16 +63,24 @@
         </div>
         <div class="columns">
             <div class="column is-full is-primary">
-                <p class="title is-5 has-background-primary has-text-white p-3 m-0">logs</p>
+                <p class="title is-6 has-background-primary has-text-white p-3 m-0">logs</p>
             </div>
         </div>
         <div class="columns">
             <div class="column is-full is-primary">
-                <table class="table"></table>
+
+            </div>
+        </div>
+        <div class="columns is-centered">
+            <div class="column is-narrow">
+                <button class="button is-primary" id="openLogBtn">Open Log</button>
+            </div>
+            <div class="column is-narrow">
+                <button class="button is-primary" id="convertBtn">Convert</button>
             </div>
         </div>
     </div>
-    <script type="text/javascript" src="gui.js"></script>
+    <script type="text/javascript" src="../script/gui.js"></script>
 </body>
 
 </html>

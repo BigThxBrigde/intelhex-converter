@@ -1,19 +1,27 @@
 const { dialog } = require('electron')
-const { Application, handle } = require('./application')
+const { Application, IPC } = require('./application')
 
 const app = new Application()
 
 app.startup().then(() => {
-    handle('path-selection', async (e, ...args) => {
-        const dlg = await dialog.showOpenDialog({
-            properties: ['openFile', 'openDirectory']
-        })
-        return dlg.filePaths[0]
-    })
-    handle('folder-selection', async (e, ...args) => {
-        const dlg = await dialog.showOpenDialog({
-            properties: ['openDirectory']
-        })
-        return dlg.filePaths[0]
-    })
+    const openDialog = async (e, ...args) => {
+        const isFolder = !args[0]
+        const options = {
+            properties: isFolder ? ['openDirectory'] : ['openFile'],
+            filters: isFolder ? [] :
+                [
+                    { name: 'Hex Files', extensions: ['hex'] },
+                    { name: 'All Files', extensions: ['*'] }
+                ]
+        }
+
+        const d = await dialog.showOpenDialog(options)
+        return d.filePaths[0]
+    }
+
+    IPC.handle('path-selection', openDialog)
+    IPC.handle('target-selection', openDialog)
+
+}).catch((e) => {
+    console.log(e)
 })
