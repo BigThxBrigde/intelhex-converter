@@ -1,14 +1,28 @@
-const { exec } = require('child_process')
+const { exec, execFile } = require('child_process')
 const { EOL } = require('os')
 const path = require('path')
 
+const MSG_IDENT = "__MSG__IDENT__"
+
 const converters = {
-    'win32': path.resolve('../converter/dist/hexconverter.exe'),
-    'linux': path.resolve('../converter/dist/hexconverter')
+    'win32': path.resolve('./pyconverter/hexconverter.exe'),
+    'linux': path.resolve('./pyconverter/hexconverter')
 }
 const converter = converters[process.platform] || ''
 
-const MSG_IDENT = "__MSG__IDENT__"
+const openers = {
+    'win32': 'cmd',
+    'linux': 'xdg-open'
+}
+
+const opener = openers[process.platform] || ''
+
+const openFile = (file) => {
+    if (!opener) return
+    const args = process.platform === 'win32' ? ['/c', 'start', file] : [file]
+    execFile(opener, args)
+}
+
 
 class PyConverter {
     constructor(source, target) {
@@ -53,7 +67,25 @@ class PyConverter {
     }
 }
 
+const rules = [
+    { expression: /&/g, replacement: '&amp;' }, // keep this rule at first position
+    { expression: /</g, replacement: '&lt;' },
+    { expression: />/g, replacement: '&gt;' },
+    { expression: /"/g, replacement: '&quot;' },
+    { expression: /'/g, replacement: '&#039;' } // or  &#39;  or  &#0039;
+]
+
+class HtmlHelper {
+    static escape(html) {
+        let result = html
+        rules.forEach((e, i) => {
+            result = result.replace(e.expression, e.replacement);
+        })
+        return result
+    }
+}
+
 
 module.exports = {
-    PyConverter
+    PyConverter, openFile, HtmlHelper
 }

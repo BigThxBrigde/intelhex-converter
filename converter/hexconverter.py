@@ -111,7 +111,8 @@ def init_logger():
     logger = logging.getLogger("hex-conveter")
     logger.setLevel(logging.DEBUG)
 
-    file_handler = logging.FileHandler("hex-converter.log")
+    logfile_path = get_full_path(path.join(os.getenv("APPDATA"), "hex-converter.log"))
+    file_handler = logging.FileHandler(logfile_path)
     file_handler.setFormatter(
         logging.Formatter(
             "%(asctime)s - [%(levelname)-7s] # %(funcName)-20s# %(lineno)-4d: %(message)s"
@@ -276,7 +277,8 @@ def format_option(arg_dict):
     input_path = get_full_path(input_path)
 
     if output_path is None:
-        output_path = os.getcwd()
+        output_path = get_full_path(path.join(os.getenv("USERPROFILE"), "hexconverter"))
+        _logger.info("target not set use %s as default", output_path)
     else:
         output_path = get_full_path(output_path)
 
@@ -306,6 +308,10 @@ def main_entry():
     if messaging:
         _msgsender.enable = True
 
+    if not exists_path(out_path):
+        _logger.info("Not found target folder: %s, it would be created", out_path)
+        os.makedirs(get_full_path(out_path))
+
     try:
         return _R_SUCCESS if do_conversion(hex_files, out_path) else _R_FAIL
     except Exception as err:
@@ -314,12 +320,16 @@ def main_entry():
 
 
 if __name__ == "__main__":
+    exit_code = _R_SUCCESS
     try:
         _logger = init_logger()
         _parser = init_option()
         _msgsender = init_msgsender()
 
-        exit(main_entry())
+        exit_code = main_entry()
     except Exception as err:
         print(err)
-        exit(_R_UNKNOWN)
+        exit_code = _R_UNKNOWN
+
+    _logger.info("Converter exit with code: %s", exit_code)
+    exit(exit_code)

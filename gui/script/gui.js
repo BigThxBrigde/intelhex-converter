@@ -1,7 +1,7 @@
 
 const path = require('path')
 const { IPC, pathExists } = require('../application')
-
+const { HtmlHelper } = require('../conversion')
 const inputFileSelector = document.querySelector('#inputFileSelector')
 const inputFolderSelector = document.querySelector('#inputFolderSelector')
 const pathInput = document.querySelector('#pathInput')
@@ -42,7 +42,11 @@ const setProgress = (i) => {
     progressBar.value = i
 }
 
-targetFolderInput.value = path.resolve('.')
+const openFile = (file) => IPC.send('open-file', file)
+
+const logFile = path.resolve(path.join(process.env.APPDATA, 'hex-converter.log'))
+
+targetFolderInput.value = path.resolve(path.join(process.env.USERPROFILE, 'hexconverter'))
 
 inputFileSelector.addEventListener('click', async () => await selectPath('path-selection', pathInput, true))
 
@@ -52,12 +56,15 @@ targetFolderSelector.addEventListener('click', async () => await selectPath('tar
 
 convertBtn.addEventListener('click', () => IPC.send('on-conv', pathInput.value, targetFolderInput.value))
 
+openLogBtn.addEventListener('click', () => openFile(logFile))
+
 IPC.rendererOn('on-conv-start', (e, args) => {
     messages.length = 0
     enableElements(true)
     clearStates()
     setProgress(10)
 })
+
 IPC.rendererOn('on-conv-message', (e, args) => {
     const msg = args.msg
     const i = messages.findIndex((v, i) => v.source === msg.source)
@@ -69,20 +76,29 @@ IPC.rendererOn('on-conv-message', (e, args) => {
     resultGrid.innerHTML = ''
     messages.forEach((v, i) => {
         resultGrid.innerHTML += `<tr>
-                                <td>${v.source}</td>
-                                <td>${v.target}</td>
-                                <td>${v.status}</td>
+                                <td>${HtmlHelper.escape(v.source)}</td>
+                                <td><a href="#">${HtmlHelper.escape(v.target)}</a></td>
+                                <td>${HtmlHelper.escape(v.status)}</td>
                             </tr>`
     })
-    setProgress(progressBar.value + parseInt(Math.random()*10))
+    const anchors = resultGrid.querySelectorAll('a')
+    anchors.forEach((a, i) => {
+        a.addEventListener('click', () => {
+            openFile(a.innerText)
+        })
+    })
+    setProgress(progressBar.value + parseInt(Math.random() * 10))
 })
+
 IPC.rendererOn('on-conv-log', (e, args) => {
-    logPanel.innerHTML += `<p class="pb-1">${args}</p>`
-    setProgress(progressBar.value + parseInt(Math.random()*10))
+    logPanel.innerHTML += `<p class="pb-1">${HtmlHelper.escape(args)}</p>`
+    setProgress(progressBar.value + parseInt(Math.random() * 10))
 })
+
 IPC.rendererOn('on-conv-error', (e, args) => {
     console.log(args)
 })
+
 IPC.rendererOn('on-conv-exit', (e, args) => {
     enableElements(false)
     setProgress(100)

@@ -1,6 +1,6 @@
 const { dialog } = require('electron')
-const { Application, IPC } = require('./application')
-const { PyConverter } = require('./conversion')
+const { Application, IPC, pathExists } = require('./application')
+const { PyConverter, openFile } = require('./conversion')
 
 const app = new Application()
 
@@ -32,6 +32,13 @@ app.startup().then(() => {
         const onExit = (data) => IPC.mainSend(app.mainWindow, 'on-conv-exit', data)
 
         converter.convert({ onStart, onMessage, onLog, onError, onExit })
+    })
+
+    IPC.on('open-file', (e, ...args) => {
+        if (!pathExists(args[0])) {
+            return
+        }
+        openFile(args[0])
     })
 
 }).catch((e) => {
