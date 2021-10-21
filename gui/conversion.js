@@ -30,12 +30,13 @@ class PyConverter {
         this.target = path.resolve(target)
     }
 
-    convert(options) {
+    async convert(options) {
+      return new Promise((resolve, reject)=>{
         try {
             const { onStart, onMessage, onLog, onError, onExit } = options
             if (!converter) {
                 onError('No converter found')
-                return;
+                reject() 
             }
 
             onStart()
@@ -60,10 +61,14 @@ class PyConverter {
             proc.on('close', data => {
                 onExit(data)
             })
+
+            resolve()
         } catch (e) {
             console.log(e)
             onExit('Unknown error')
+            reject()
         }
+      })
     }
 }
 

@@ -23,7 +23,7 @@ app.startup().then(() => {
     IPC.handle('path-selection', openDialog)
     IPC.handle('target-selection', openDialog)
 
-    IPC.on('on-conv', (e, ...args) => {
+    IPC.on('on-conv', async(e, ...args) => {
         const converter = new PyConverter(args[0], args[1])
         const onStart = () => IPC.mainSend(app.mainWindow, 'on-conv-start')
         const onMessage = (data) => IPC.mainSend(app.mainWindow, 'on-conv-message', data)
@@ -31,7 +31,7 @@ app.startup().then(() => {
         const onError = (data) => IPC.mainSend(app.mainWindow, 'on-conv-error', data)
         const onExit = (data) => IPC.mainSend(app.mainWindow, 'on-conv-exit', data)
 
-        converter.convert({ onStart, onMessage, onLog, onError, onExit })
+        await converter.convert({ onStart, onMessage, onLog, onError, onExit })
     })
 
     IPC.on('open-file', (e, ...args) => {

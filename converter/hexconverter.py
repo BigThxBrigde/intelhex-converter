@@ -10,7 +10,7 @@ from genericpath import isfile, isdir
 
 # Attention: `pathlib` only works >= python3.4
 from pathlib import Path as PathObject
-from os import path
+from os import mkdir, path
 
 # To avoid exit is not defined error after py2exe packed, must import `exit`
 # https://stackoverflow.com/questions/45066518/nameerror-name-exit-is-not-defined
@@ -106,12 +106,31 @@ def post_message(src, dest, status):
     _msgsender.post(msg={"source": src, "target": dest, "status": status})
 
 
+def get_home_folder(is_userprofile):
+    home_folder = "."
+
+    from sys import platform
+
+    if platform == "linux" or platform == "linux2":
+        home_folder = os.getenv("HOME")
+    elif platform == "win32":
+        home_folder = (
+            os.getenv("USERPROFILE") if is_userprofile else os.getenv("APPDATA")
+        )
+    converter_home = get_full_path(path.join(home_folder, "hexconverter"))
+
+    if not exists_path(converter_home):
+        os.makedirs(converter_home)
+
+    return converter_home
+
+
 # initialize the logger
 def init_logger():
     logger = logging.getLogger("hex-conveter")
     logger.setLevel(logging.DEBUG)
 
-    logfile_path = get_full_path(path.join(os.getenv("APPDATA"), "hex-converter.log"))
+    logfile_path = get_full_path(path.join(get_home_folder(False), "hex-converter.log"))
     file_handler = logging.FileHandler(logfile_path)
     file_handler.setFormatter(
         logging.Formatter(
@@ -277,7 +296,7 @@ def format_option(arg_dict):
     input_path = get_full_path(input_path)
 
     if output_path is None:
-        output_path = get_full_path(path.join(os.getenv("USERPROFILE"), "hexconverter"))
+        output_path = get_home_folder(True) 
         _logger.info("target not set use %s as default", output_path)
     else:
         output_path = get_full_path(output_path)

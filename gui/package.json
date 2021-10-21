@@ -8,17 +8,22 @@
     "dev": "set CONFIGURATION=DEBUG&& electron .",
     "dev-linux": "export CONFIGURATION=DEBUG&& electron .",
     "start": "electron .",
-    "pack": "electron-builder --win --x64"
+    "pack": "electron-builder --win --x64",
+    "pack-linux": "electron-builder --linux --x64"
   },
   "repository": {
     "type": "git",
     "url": "https://gitee.com/jermaine/intelhex-converter"
   },
+  "homepage": "https://gitee.com/jermaine/intelhex-converter",
   "keywords": [
     "intel",
     "hex"
   ],
-  "author": "i77",
+  "author": {
+    "name": "i77",
+    "email": "i77@idea7.top"
+  },
   "license": "ISC",
   "build": {
     "appId": "top.idea7.ihex",
@@ -32,6 +37,11 @@
       "target": [
         "nsis",
         "zip"
+      ]
+    },
+    "linux": {
+      "target": [
+        "tar.gz"
       ]
     },
     "extraFiles": [

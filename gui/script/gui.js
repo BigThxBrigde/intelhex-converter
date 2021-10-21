@@ -42,11 +42,21 @@ const setProgress = (i) => {
     progressBar.value = i
 }
 
+const getHomeFolder = (isUserProfile) => {
+    let home = '.'
+    if (process.platform === 'win32') {
+        home = isUserProfile ? process.env.USERPROFILE : process.env.APPDATA
+    } else if (process.platform === 'linux') {
+        home = process.env.HOME
+    }
+    return path.resolve(path.join(home, 'hexconverter'))    
+}
+
 const openFile = (file) => IPC.send('open-file', file)
 
-const logFile = path.resolve(path.join(process.env.APPDATA, 'hex-converter.log'))
+const logFile = path.resolve(path.join(getHomeFolder(false), 'hex-converter.log'))
 
-targetFolderInput.value = path.resolve(path.join(process.env.USERPROFILE, 'hexconverter'))
+targetFolderInput.value = getHomeFolder(true)
 
 inputFileSelector.addEventListener('click', async () => await selectPath('path-selection', pathInput, true))
 
