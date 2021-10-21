@@ -24,6 +24,7 @@
     "appId": "top.idea7.ihex",
     "productName": "Intel Hex Converter",
     "directories": {
+      "buildResources": "ico",
       "output": "../dist"
     },
     "buildVersion": "1.0.0",
